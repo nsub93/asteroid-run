@@ -8,6 +8,7 @@ module GameObject
 , getGameObjectCoordinates
 , getGameObjectSize
 , detectCollision
+, changeGameObjectImage
 ) where
 
 import Graphics.Gloss
