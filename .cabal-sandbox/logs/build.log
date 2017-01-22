@@ -1,0 +1,68 @@
+
+package: bmp-1.2.6.3
+os: linux
+arch: x86_64
+compiler: ghc-7.10.3
+client: cabal-install-1.22.6.0
+dependencies: bytestring-0.10.6.0 binary-0.7.5.0 base-4.8.2.0
+install-outcome: InstallOk
+docs-outcome: NotTried
+tests-outcome: NotTried
+
+package: gloss-1.10.2.5
+os: linux
+arch: x86_64
+compiler: ghc-7.10.3
+client: cabal-install-1.22.6.0
+flags: glut -glfw -explicitbackend
+dependencies: gloss-rendering-1.10.3.5 ghc-prim-0.4.0.0
+              containers-0.5.6.2 bytestring-0.10.6.0 bmp-1.2.6.3 base-4.8.2.0
+              OpenGL-2.12.0.1 GLUT-2.7.0.1
+install-outcome: InstallOk
+docs-outcome: NotTried
+tests-outcome: NotTried
+
+package: gloss-rendering-1.10.3.5
+os: linux
+arch: x86_64
+compiler: ghc-7.10.3
+client: cabal-install-1.22.6.0
+dependencies: containers-0.5.6.2 bytestring-0.10.6.0 bmp-1.2.6.3
+              base-4.8.2.0 OpenGL-2.12.0.1 GLUT-2.7.0.1
+install-outcome: InstallOk
+docs-outcome: NotTried
+tests-outcome: NotTried
+
+package: JuicyPixels-3.2.8
+os: linux
+arch: x86_64
+compiler: ghc-7.10.3
+client: cabal-install-1.22.6.0
+flags: -mmap
+dependencies: zlib-0.6.1.1 vector-0.11.0.0 transformers-0.4.2.0
+              primitive-0.6.1.0 mtl-2.2.1 deepseq-1.4.1.1 containers-0.5.6.2
+              bytestring-0.10.6.0 binary-0.7.5.0 base-4.8.2.0
+install-outcome: InstallOk
+docs-outcome: NotTried
+tests-outcome: NotTried
+
+package: gloss-game-0.3.3.0
+os: linux
+arch: x86_64
+compiler: ghc-7.10.3
+client: cabal-install-1.22.6.0
+dependencies: gloss-juicy-0.2.2 gloss-1.10.2.5 base-4.8.2.0
+install-outcome: InstallOk
+docs-outcome: NotTried
+tests-outcome: NotTried
+
+package: gloss-juicy-0.2.2
+os: linux
+arch: x86_64
+compiler: ghc-7.10.3
+client: cabal-install-1.22.6.0
+dependencies: vector-0.11.0.0 gloss-1.10.2.5 bytestring-0.10.6.0
+              bmp-1.2.6.3 base-4.8.2.0 JuicyPixels-3.2.8
+install-outcome: InstallOk
+docs-outcome: NotTried
+tests-outcome: NotTried
