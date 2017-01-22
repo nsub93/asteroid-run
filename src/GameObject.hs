@@ -1,17 +1,13 @@
 module GameObject 
 ( GameObject
 , CollisionType (TopCollision, BottomCollision, LeftCollision, RightCollision, NoCollision)
-, createGameObject
+, createGameObjectImgPath
+, createGameObjectImgObject
 , moveGameObject  
 , drawGameObject
 , getGameObjectCoordinates
 , getGameObjectSize
 , detectCollision
-, getCollisionType
-, getLeftCollisionCoefficient
-, getRightCollisionAngleCoefficient
-, getTopCollisionAngleCoefficient
-, getBottomCollisionAngleCoefficient
 ) where
 
 import Graphics.Gloss
@@ -36,8 +32,12 @@ data CollisionType = TopCollision
 
 type Collision = (CollisionType, Float, Float, Float, Float)
 
-createGameObject :: (Float, Float) -> (Float, Float) -> (String, Float, Float) ->  GameObject
-createGameObject (nx, ny) (w, h) (path, pw ,ph) = obj
+createGameObjectImgObject :: (Float, Float) -> (Float, Float) -> Picture -> GameObject
+createGameObjectImgObject (nx, ny) (w, h) img = GameObject nx ny w h img
+
+
+createGameObjectImgPath :: (Float, Float) -> (Float, Float) -> (String, Float, Float) ->  GameObject
+createGameObjectImgPath (nx, ny) (w, h) (path, pw ,ph) = obj
                         where 
                             cx = w / pw
                             cy = h / ph
@@ -48,6 +48,9 @@ createGameObject (nx, ny) (w, h) (path, pw ,ph) = obj
                                             , height = h
                                             , image = pic 
                                             }
+
+changeGameObjectImage :: GameObject -> Picture -> GameObject
+changeGameObjectImage obj img = obj { image = img }
 
 moveGameObject :: GameObject -> Float -> Float -> GameObject
 moveGameObject obj dx dy = obj { x = x', y = y' }
@@ -131,17 +134,3 @@ detectCollision obj1 obj2 = (collisionType,
       else
         NoCollision
 
-getCollisionType :: GameObject -> CollisionType
-getCollisionType (collisionType, _, _, _, _) = collisionType
-
-getLeftCollisionCoefficient :: GameObject -> Float
-getLeftCollisionCoefficient (_, leftCollisionCoefficient, _, _, _) = leftCollisionCoefficient
-
-getRightCollisionAngleCoefficient :: GameObject -> Float
-getRightCollisionAngleCoefficient (_, _, rightCollisionAngleCoefficient, _, _) = rightCollisionAngleCoefficient
-
-getTopCollisionAngleCoefficient :: GameObject -> Float
-getTopCollisionAngleCoefficient (_, _, _, topCollisionAngleCoefficient, _) = topCollisionAngleCoefficient
-
-getBottomCollisionAngleCoefficient :: GameObject -> Float
-getBottomCollisionAngleCoefficient (_, _, _, _, bottomCollisionAngleCoefficient) = bottomCollisionAngleCoefficient
