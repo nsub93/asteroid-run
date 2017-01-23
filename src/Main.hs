@@ -35,6 +35,7 @@ processEvent (EventKey (SpecialKey KeyUp) Up _ _) world = world { player2Up = Fa
 processEvent (EventKey (SpecialKey KeyDown) Up _ _) world = world { player2Down = False }
 
 processEvent (EventKey (SpecialKey KeySpace) Down _ _) world = world { lasers = (addLaser (lasers world) (getGameObjectCoordinates (player1 world))) }
+processEvent (EventKey (SpecialKey KeyEnter) Down _ _) world = world { lasers = (addLaser (lasers world) (getGameObjectCoordinates (player2 world))) }
 
 
 -- drugi igrac
