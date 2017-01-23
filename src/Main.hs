@@ -15,39 +15,46 @@ fps = 200
 
 render :: GameWorld -> Picture
 render gameWorld = 
-    pictures [ backgroundImage
-             , drawGameObject $ player1 gameWorld
+    pictures ([ backgroundImage]++
+              ( map (drawGameObject) (lasers gameWorld))++
+              [ drawGameObject $ player1 gameWorld
              , drawGameObject $ player2 gameWorld
-             ]
+              ])
 
 processEvent :: Event -> GameWorld -> GameWorld
 
 -- prvi igrac
-processEvent (EventKey (SpecialKey KeyLeft) Down _ _) world = world { player1Left = True }
-processEvent (EventKey (SpecialKey KeyRight) Down _ _) world = world { player1Right = True }
-processEvent (EventKey (SpecialKey KeyLeft) Up _ _) world = world { player1Left = False }
-processEvent (EventKey (SpecialKey KeyRight) Up _ _) world = world { player1Right = False }
+processEvent (EventKey (SpecialKey KeyLeft) Down _ _) world = world { player2Left = True }
+processEvent (EventKey (SpecialKey KeyRight) Down _ _) world = world { player2Right = True }
+processEvent (EventKey (SpecialKey KeyLeft) Up _ _) world = world { player2Left = False }
+processEvent (EventKey (SpecialKey KeyRight) Up _ _) world = world { player2Right = False }
 
-processEvent (EventKey (SpecialKey KeyUp) Down _ _) world = world { player1Up = True }
-processEvent (EventKey (SpecialKey KeyDown) Down _ _) world = world { player1Down = True }
-processEvent (EventKey (SpecialKey KeyUp) Up _ _) world = world { player1Up = False }
-processEvent (EventKey (SpecialKey KeyDown) Up _ _) world = world { player1Down = False }
+processEvent (EventKey (SpecialKey KeyUp) Down _ _) world = world { player2Up = True }
+processEvent (EventKey (SpecialKey KeyDown) Down _ _) world = world { player2Down = True }
+processEvent (EventKey (SpecialKey KeyUp) Up _ _) world = world { player2Up = False }
+processEvent (EventKey (SpecialKey KeyDown) Up _ _) world = world { player2Down = False }
+
+processEvent (EventKey (SpecialKey KeySpace) Down _ _) world = world { lasers = (addLaser (lasers world) (getGameObjectCoordinates (player1 world))) }
+
 
 -- drugi igrac
-processEvent (EventKey (Char 'a') Down _ _) world = world { player2Left = True }
-processEvent (EventKey (Char 'd') Down _ _) world = world { player2Right = True }
-processEvent (EventKey (Char 'a') Up _ _) world = world { player2Left = False }
-processEvent (EventKey (Char 'd') Up _ _) world = world { player2Right = False }
+processEvent (EventKey (Char 'a') Down _ _) world = world { player1Left = True }
+processEvent (EventKey (Char 'd') Down _ _) world = world { player1Right = True }
+processEvent (EventKey (Char 'a') Up _ _) world = world { player1Left = False }
+processEvent (EventKey (Char 'd') Up _ _) world = world { player1Right = False }
 
-processEvent (EventKey (Char 'w') Down _ _) world = world { player2Up = True }
-processEvent (EventKey (Char 's') Down _ _) world = world { player2Down = True }
-processEvent (EventKey (Char 'w') Up _ _) world = world { player2Up = False }
-processEvent (EventKey (Char 's') Up _ _) world = world { player2Down = False }
+processEvent (EventKey (Char 'w') Down _ _) world = world { player1Up = True }
+processEvent (EventKey (Char 's') Down _ _) world = world { player1Down = True }
+processEvent (EventKey (Char 'w') Up _ _) world = world { player1Up = False }
+processEvent (EventKey (Char 's') Up _ _) world = world { player1Down = False }
 
 processEvent _ world = world
 
+addLaser :: [GameObject]->(Float,Float)->[GameObject]
+addLaser laserArray (x,y) = laserArray ++ [(createGameObjectImgObject (x, y+10) (14, 37) laserImage)]
+
 movePlayers :: GameWorld -> GameWorld
-movePlayers world = world { player1 = newPlayer1 , player2 = newPlayer2 }
+movePlayers world = world { player1 = newPlayer1 , player2 = newPlayer2, lasers= newLasers }
             where
                 step = 1.5
   
@@ -77,6 +84,9 @@ movePlayers world = world { player1 = newPlayer1 , player2 = newPlayer2 }
                 newPlayer2 = if dx2 > 0 then changeGameObjectImage p2 player2RightImg
                              else if dx2 < 0 then changeGameObjectImage p2 player2LeftImg
                              else changeGameObjectImage p2 player2BasicImg
+                
+                newLasers = map (\x -> moveGameObject x 0 1.6) (lasers world)
+
 
 
 update :: Float -> GameWorld -> GameWorld
