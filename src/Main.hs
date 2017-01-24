@@ -3,6 +3,8 @@ module Main (main) where
 import GameObject
 import Graphics.Gloss
 import Graphics.Gloss.Game as Game
+import System.Random
+import Data.List
 
 window :: Display
 window = InWindow "Asteroid run" (1000,700) (10,10)
@@ -19,7 +21,7 @@ render gameWorld =
               ( map (drawGameObject) (lasers gameWorld))++
               [ drawGameObject $ player1 gameWorld
              , drawGameObject $ player2 gameWorld
-              ])
+              ]++ ( map (drawGameObject) (asteroids gameWorld)))
 
 processEvent :: Event -> GameWorld -> GameWorld
 
@@ -54,8 +56,12 @@ processEvent _ world = world
 addLaser :: [GameObject]->(Float,Float)->[GameObject]
 addLaser laserArray (x,y) = laserArray ++ [(createGameObjectImgObject (x, y+10) (14, 37) laserImage)]
 
-movePlayers :: GameWorld -> GameWorld
-movePlayers world = world { player1 = newPlayer1 , player2 = newPlayer2, lasers= newLasers }
+updateCounter :: GameWorld->GameWorld
+updateCounter world = world {frameCounter = ((frameCounter world)+1)}
+
+
+moveObjects :: GameWorld -> GameWorld
+moveObjects world = world { player1 = newPlayer1 , player2 = newPlayer2, lasers= newLasers, asteroids=newAsteroids }
             where
                 step = 1.5
   
@@ -86,12 +92,38 @@ movePlayers world = world { player1 = newPlayer1 , player2 = newPlayer2, lasers=
                              else if dx2 < 0 then changeGameObjectImage p2 player2LeftImg
                              else changeGameObjectImage p2 player2BasicImg
                 
-                newLasers = map (\x -> moveGameObject x 0 1.6) (lasers world)
+                (newLasers,newAsteroids) = laserAsteroidCollision (map (\x -> moveGameObject x 0 1.6) (lasers world)) (map (\x -> moveGameObject x (0.1) (-1.6)) (asteroids world))
+
+                --newLasers = map (\x -> moveGameObject x 0 1.6) (lasers world)
+                --newAsteroids = map (\x -> moveGameObject x (0.1) (-0.7)) (asteroids world)
+
+laserAsteroidCollision :: [GameObject]->[GameObject]->([GameObject],[GameObject])
+laserAsteroidCollision lasers asteroids = let
+                                                lasersId = zip [1..] lasers
+                                                asteroidsId = zip [1..] asteroids
+                                                cartesianList = [(x,y) | x<-lasersId,y<-asteroidsId]
+                                                collisions = filter (\(x,y) ->  collisionExists (snd x) (snd y)) cartesianList
+                                                (lasersRemove,_) = unzip $ map (fst) collisions
+                                                (asteroidsRemove,_) = unzip $ map (snd) collisions
+                                                --(lasersRemove,_) = unzip $ map (fst) collisions
+                                                --asteroidsRemove = map (snd) collisions
+                                          in
+                                                (map snd (filter (\(x,y) -> notElem x lasersRemove) lasersId ),map snd (filter (\(x,y) -> notElem x asteroidsRemove) asteroidsId ))
+
+collisionExists obj1 obj2 = let
+                                    (colType,_,_,_,_) = detectCollision  obj1  obj2
+                            in
+                                    colType /= NoCollision
 
 
-
+createAsteroid::Float->GameWorld->GameWorld
+createAsteroid sec world = world { asteroids=newAsteroids }
+            where
+                newAsteroids =  if (0 == mod (frameCounter world) 300) then (asteroids world) ++ [createGameObjectImgObject (0 , 500 ) (200, 180) asteroidBigImage]
+                                else asteroids world
+ 
 update :: Float -> GameWorld -> GameWorld
-update sec world = movePlayers world
+update sec world = moveObjects $ updateCounter $ createAsteroid sec world 
 
 -- ucitavanje svih slika
 player1BasicImg = png "images/greenBasic.png"
@@ -104,6 +136,9 @@ player2LeftImg = png "images/orangeLeft.png"
 
 backgroundImage = png "images/sky.png"
 laserImage = png "images/laser.png"
+asteroidBigImage = png "images/asteroidBig.png"
+asteroidSmallImage = png "images/asteroidSmall.png"
+
 
 data GameWorld = GameWorld  { player1 :: GameObject
                             , player1Down :: Bool
@@ -117,6 +152,7 @@ data GameWorld = GameWorld  { player1 :: GameObject
                             , player2Right :: Bool
                             , asteroids :: [GameObject]
                             , lasers :: [GameObject]
+                            , frameCounter :: Int
                             }
 
 initialWorld = GameWorld { player1 = createGameObjectImgObject (-200, 0) (80, 80) player1BasicImg
@@ -131,6 +167,7 @@ initialWorld = GameWorld { player1 = createGameObjectImgObject (-200, 0) (80, 80
                          , player2Up = False
                          , player2Left = False
                          , player2Right = False
+                         , frameCounter = 0
                          }
 
 
