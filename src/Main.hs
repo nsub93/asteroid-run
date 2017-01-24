@@ -64,38 +64,42 @@ moveObjects :: GameWorld -> GameWorld
 moveObjects world = world { player1 = newPlayer1 , player2 = newPlayer2, lasers= newLasers, asteroids=newAsteroids }
             where
                 step = 1.5
-  
-                dx1 = if (player1Left world) then - step 
-                      else if (player1Right world) then step              
+            
+                (player1X,player1Y) = getGameObjectCoordinates (player1 world)
+                (player2X,player2Y) = getGameObjectCoordinates (player2 world)
+
+                                    --(playerX+40 > 500 || playerX-40 < -500) || (playerY+40 > 350 || playerY-40 < -350)
+
+
+                dx1 = if ((player1Left world) && (not $ player1X - 40 < -500)) then -step 
+                      else if ((player1Right world) && (not $ player1X + 40 > 500)) then step              
                       else 0.0
 
-                dx2 = if (player2Left world) then  - step
-                      else if (player2Right world) then step    
+                dx2 = if ((player2Left world) && (not $ player2X - 40 < -500)) then  - step
+                      else if ((player2Right world) && (not $ player2X + 40 > 500)) then step  
                       else 0.0             
                       
-                dy1 = if (player1Up world) then step
-                      else if (player1Down world) then -step              
+                dy1 = if ((player1Up world) && (not $ player1Y + 40 > 350)) then step
+                      else if ((player1Down world) && (not $ player1Y - 40 < -350)) then -step              
                       else 0.0
 
-                dy2 = if (player2Up world) then step
-                      else if (player2Down world) then -step              
+                dy2 = if ((player2Up world) && (not $ player2Y + 40 > 350)) then step
+                      else if ((player2Down world) && (not $ player2Y - 40 < -350)) then -step              
                       else 0.0
 
                 p1 =  moveGameObject (player1 world) dx1 dy1                                
                 p2 =  moveGameObject (player2 world) dx2 dy2
 
-                newPlayer1 = if dx1 > 0 then changeGameObjectImage p1 player1RightImg
-                             else if dx1 < 0 then changeGameObjectImage p1 player1LeftImg
+                newPlayer1 = if (dx1 > 0 || (player1Right world)) then changeGameObjectImage p1 player1RightImg
+                             else if (dx1 < 0 || (player1Left world)) then changeGameObjectImage p1 player1LeftImg
                              else changeGameObjectImage p1 player1BasicImg
 
-                newPlayer2 = if dx2 > 0 then changeGameObjectImage p2 player2RightImg
-                             else if dx2 < 0 then changeGameObjectImage p2 player2LeftImg
+                newPlayer2 = if (dx2 > 0 || (player2Right world)) then changeGameObjectImage p2 player2RightImg
+                             else if (dx2 < 0 || (player2Left world)) then changeGameObjectImage p2 player2LeftImg
                              else changeGameObjectImage p2 player2BasicImg
                 
                 (newLasers,newAsteroids) = laserAsteroidCollision (map (\x -> moveGameObject x 0 1.6) (lasers world)) (map (\x -> moveGameObject x (0.1) (-1.6)) (asteroids world))
 
-                --newLasers = map (\x -> moveGameObject x 0 1.6) (lasers world)
-                --newAsteroids = map (\x -> moveGameObject x (0.1) (-0.7)) (asteroids world)
 
 laserAsteroidCollision :: [GameObject]->[GameObject]->([GameObject],[GameObject])
 laserAsteroidCollision lasers asteroids = let
@@ -105,8 +109,6 @@ laserAsteroidCollision lasers asteroids = let
                                                 collisions = filter (\(x,y) ->  collisionExists (snd x) (snd y)) cartesianList
                                                 (lasersRemove,_) = unzip $ map (fst) collisions
                                                 (asteroidsRemove,_) = unzip $ map (snd) collisions
-                                                --(lasersRemove,_) = unzip $ map (fst) collisions
-                                                --asteroidsRemove = map (snd) collisions
                                           in
                                                 (map snd (filter (\(x,y) -> notElem x lasersRemove) lasersId ),map snd (filter (\(x,y) -> notElem x asteroidsRemove) asteroidsId ))
 
@@ -153,10 +155,15 @@ data GameWorld = GameWorld  { player1 :: GameObject
                             , asteroids :: [GameObject]
                             , lasers :: [GameObject]
                             , frameCounter :: Int
+                            , screenMiddle :: GameObject
+                            , screenLeft ::GameObject
+                            , screenRight ::GameObject
+                            , screenUp :: GameObject
+                            , screenDown :: GameObject
                             }
 
-initialWorld = GameWorld { player1 = createGameObjectImgObject (-200, 0) (80, 80) player1BasicImg
-                         , player2 = createGameObjectImgObject (200, 0) (80, 80) player2BasicImg
+initialWorld = GameWorld { player1 = createGameObjectImgObject (0, 0) (80, 80) player1BasicImg
+                         , player2 = createGameObjectImgObject (0, -310) (80, 80) player2BasicImg
                          , asteroids = []
                          , lasers = []
                          , player1Down = False
@@ -168,6 +175,11 @@ initialWorld = GameWorld { player1 = createGameObjectImgObject (-200, 0) (80, 80
                          , player2Left = False
                          , player2Right = False
                          , frameCounter = 0
+                         , screenMiddle = createGameObjectImgObject (0, 0) (1000, 700) player2BasicImg
+                         , screenLeft = createGameObjectImgObject (-505, 0) (10, 700) player2BasicImg
+                         , screenRight = createGameObjectImgObject (505, 0) (10,700) player2BasicImg
+                         , screenUp = createGameObjectImgObject (0, 355) (1000, 10) player2BasicImg
+                         , screenDown = createGameObjectImgObject (0, -355) (1000, 10) player2BasicImg
                          }
 
 
