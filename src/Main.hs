@@ -21,7 +21,7 @@ render gameWorld =
               ( map (drawGameObject) (lasers gameWorld))++
               [ drawGameObject $ player1 gameWorld
              , drawGameObject $ player2 gameWorld
-              ]++ ( map (drawGameObject) (asteroids gameWorld)))
+              ]++ ( map (drawGameObject) (asteroids gameWorld)++ [translate 300 200 $ text ( show (pointCounter gameWorld))]))
 
 processEvent :: Event -> GameWorld -> GameWorld
 
@@ -36,8 +36,8 @@ processEvent (EventKey (SpecialKey KeyDown) Down _ _) world = world { player2Dow
 processEvent (EventKey (SpecialKey KeyUp) Up _ _) world = world { player2Up = False }
 processEvent (EventKey (SpecialKey KeyDown) Up _ _) world = world { player2Down = False }
 
-processEvent (EventKey (SpecialKey KeySpace) Down _ _) world = world { lasers = (addLaser (lasers world) (getGameObjectCoordinates (player1 world))) }
-processEvent (EventKey (SpecialKey KeyEnter) Down _ _) world = world { lasers = (addLaser (lasers world) (getGameObjectCoordinates (player2 world))) }
+processEvent (EventKey (SpecialKey KeySpace) Down _ _) world = world { lasers = (addLaser (lasers world) (getGameObjectCoordinates (player1 world)) laserGreenImage) }
+processEvent (EventKey (SpecialKey KeyEnter) Down _ _) world = world { lasers = (addLaser (lasers world) (getGameObjectCoordinates (player2 world)) laserRedImage) }
 
 
 -- drugi igrac
@@ -53,8 +53,8 @@ processEvent (EventKey (Char 's') Up _ _) world = world { player1Down = False }
 
 processEvent _ world = world
 
-addLaser :: [GameObject]->(Float,Float)->[GameObject]
-addLaser laserArray (x,y) = laserArray ++ [(createGameObjectImgObject (x, y+10) (14, 37) laserImage)]
+addLaser :: [GameObject]->(Float,Float)->Picture->[GameObject]
+addLaser laserArray (x,y) laserImage = laserArray ++ [(createGameObjectImgObject (x, y+40) (14, 37) laserImage)]
 
 updateCounter :: GameWorld->GameWorld
 updateCounter world = world {frameCounter = ((frameCounter world)+1)}
@@ -67,8 +67,6 @@ moveObjects world = world { player1 = newPlayer1 , player2 = newPlayer2, lasers=
             
                 (player1X,player1Y) = getGameObjectCoordinates (player1 world)
                 (player2X,player2Y) = getGameObjectCoordinates (player2 world)
-
-                                    --(playerX+40 > 500 || playerX-40 < -500) || (playerY+40 > 350 || playerY-40 < -350)
 
 
                 dx1 = if ((player1Left world) && (not $ player1X - 40 < -500)) then -step 
@@ -98,11 +96,20 @@ moveObjects world = world { player1 = newPlayer1 , player2 = newPlayer2, lasers=
                              else if (dx2 < 0 || (player2Left world)) then changeGameObjectImage p2 player2LeftImg
                              else changeGameObjectImage p2 player2BasicImg
                 
-                (newLasers,newAsteroids) = laserAsteroidCollision (map (\x -> moveGameObject x 0 1.6) (lasers world)) (map (\x -> moveGameObject x (0.1) (-1.6)) (asteroids world))
+                (newLasers,newAsteroids) = laserAsteroidOutOfBound $ laserAsteroidCollision ((map (\x -> moveGameObject x 0 1.6) (lasers world)),(map (\x -> moveGameObject x (0.1) (-1.6)) (asteroids world)))
 
 
-laserAsteroidCollision :: [GameObject]->[GameObject]->([GameObject],[GameObject])
-laserAsteroidCollision lasers asteroids = let
+laserAsteroidOutOfBound :: ([GameObject],[GameObject])->([GameObject],[GameObject])
+laserAsteroidOutOfBound (lasers,asteroids) =  (filter (\x ->not $ objectOutOfBound x) lasers,
+                                              filter (\x ->not $ objectOutOfBound x) asteroids)
+objectOutOfBound :: GameObject -> Bool
+objectOutOfBound obj = let
+                              (objX,objY)=getGameObjectCoordinates obj
+                       in
+                              (objX>600)||(objX< -600)||(objY>450)||(objY< -450)
+
+laserAsteroidCollision :: ([GameObject],[GameObject])->([GameObject],[GameObject])
+laserAsteroidCollision (lasers,asteroids) = let
                                                 lasersId = zip [1..] lasers
                                                 asteroidsId = zip [1..] asteroids
                                                 cartesianList = [(x,y) | x<-lasersId,y<-asteroidsId]
@@ -121,7 +128,7 @@ collisionExists obj1 obj2 = let
 createAsteroid::Float->GameWorld->GameWorld
 createAsteroid sec world = world { asteroids=newAsteroids }
             where
-                newAsteroids =  if (0 == mod (frameCounter world) 300) then (asteroids world) ++ [createGameObjectImgObject (0 , 500 ) (200, 180) asteroidBigImage]
+                newAsteroids =  if (0 == mod (frameCounter world) 300) then (asteroids world) ++ [createGameObjectImgObject (0 , 450 ) (200, 180) asteroidBigImage]
                                 else asteroids world
  
 update :: Float -> GameWorld -> GameWorld
@@ -137,7 +144,8 @@ player2RightImg = png "images/orangeRight.png"
 player2LeftImg = png "images/orangeLeft.png"
 
 backgroundImage = png "images/sky.png"
-laserImage = png "images/laser.png"
+laserRedImage = png "images/laserRed.png"
+laserGreenImage = png "images/laserGreen.png"
 asteroidBigImage = png "images/asteroidBig.png"
 asteroidSmallImage = png "images/asteroidSmall.png"
 
@@ -155,11 +163,7 @@ data GameWorld = GameWorld  { player1 :: GameObject
                             , asteroids :: [GameObject]
                             , lasers :: [GameObject]
                             , frameCounter :: Int
-                            , screenMiddle :: GameObject
-                            , screenLeft ::GameObject
-                            , screenRight ::GameObject
-                            , screenUp :: GameObject
-                            , screenDown :: GameObject
+                            , pointCounter :: Int
                             }
 
 initialWorld = GameWorld { player1 = createGameObjectImgObject (0, 0) (80, 80) player1BasicImg
@@ -175,11 +179,7 @@ initialWorld = GameWorld { player1 = createGameObjectImgObject (0, 0) (80, 80) p
                          , player2Left = False
                          , player2Right = False
                          , frameCounter = 0
-                         , screenMiddle = createGameObjectImgObject (0, 0) (1000, 700) player2BasicImg
-                         , screenLeft = createGameObjectImgObject (-505, 0) (10, 700) player2BasicImg
-                         , screenRight = createGameObjectImgObject (505, 0) (10,700) player2BasicImg
-                         , screenUp = createGameObjectImgObject (0, 355) (1000, 10) player2BasicImg
-                         , screenDown = createGameObjectImgObject (0, -355) (1000, 10) player2BasicImg
+                         , pointCounter = 0
                          }
 
 
