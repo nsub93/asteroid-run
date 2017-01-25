@@ -3,7 +3,6 @@ module Main (main) where
 import GameObject
 import Graphics.Gloss
 import Graphics.Gloss.Game as Game
-import System.Random
 import Data.List
 
 window :: Display
@@ -68,9 +67,6 @@ moveObjects world = world { player1 = newPlayer1 , player2 = newPlayer2, lasers=
                 (player1X,player1Y) = getGameObjectCoordinates (player1 world)
                 (player2X,player2Y) = getGameObjectCoordinates (player2 world)
 
-                                    --(playerX+40 > 500 || playerX-40 < -500) || (playerY+40 > 350 || playerY-40 < -350)
-
-
                 dx1 = if ((player1Left world) && (not $ player1X - 40 < -500)) then -step 
                       else if ((player1Right world) && (not $ player1X + 40 > 500)) then step              
                       else 0.0
@@ -121,7 +117,13 @@ collisionExists obj1 obj2 = let
 createAsteroid::Float->GameWorld->GameWorld
 createAsteroid sec world = world { asteroids=newAsteroids }
             where
-                newAsteroids =  if (0 == mod (frameCounter world) 300) then (asteroids world) ++ [createGameObjectImgObject (0 , 500 ) (200, 180) asteroidBigImage]
+                seed = (frameCounter world) * (ceiling (sec + 1))    
+                randX = nextRand seed
+                randY = nextRand randX
+                x' = randX `mod` 1000 - 400
+                y' = randY `mod` 700 - 250 
+                newAsteroids =  if (0 == mod (frameCounter world) 250) then (asteroids world) ++ [createGameObjectImgObject ( fromInteger $ toInteger x' , 800)  (200, 180) asteroidBigImage]
+                                -- else if (0 == mod (frameCounter world) 300) then (asteroids world) ++ [createGameObjectImgObject (1100 , 555 ) (200, 180) asteroidBigImage]
                                 else asteroids world
  
 update :: Float -> GameWorld -> GameWorld
@@ -141,6 +143,14 @@ laserImage = png "images/laser.png"
 asteroidBigImage = png "images/asteroidBig.png"
 asteroidSmallImage = png "images/asteroidSmall.png"
 
+
+-- kod preuzet sa vezbi prethodnih godina
+randMultiplier = 25173
+randIncrement = 13849
+randModulus = 65536
+
+nextRand :: Int -> Int
+nextRand  n = (randMultiplier * n + randIncrement) `mod` randModulus
 
 data GameWorld = GameWorld  { player1 :: GameObject
                             , player1Down :: Bool
@@ -181,7 +191,6 @@ initialWorld = GameWorld { player1 = createGameObjectImgObject (0, 0) (80, 80) p
                          , screenUp = createGameObjectImgObject (0, 355) (1000, 10) player2BasicImg
                          , screenDown = createGameObjectImgObject (0, -355) (1000, 10) player2BasicImg
                          }
-
 
 main :: IO ()
 main = Game.play
