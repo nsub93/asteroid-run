@@ -113,16 +113,24 @@ laserAsteroidCollision (lasers,asteroids) = let
                                                 asteroidsId = zip [1..] asteroids
                                                 cartesianList = [(x,y) | x<-lasersId,y<-asteroidsId]
                                                 collisions = filter (\(x,y) ->  collisionExists (snd x) (snd y)) cartesianList
-                                                (lasersRemove,_) = unzip $ map (fst) collisions
-                                                (asteroidsRemove,_) = unzip $ map (snd) collisions
+                                                (lasersRemoveId,_) = unzip $ map (fst) collisions
+                                                (asteroidsRemoveId, asteroidsRemove) = unzip $ map (snd) collisions
+                                                replacedBigAsteroids =  foldr (\asteroid asteroids -> (separateAsteroid asteroid) ++ asteroids ) [] (filter (\x -> fst(getGameObjectSize x)  == 200.0) asteroidsRemove)
+                                                                         
                                           in
-                                                (map snd (filter (\(x,y) -> notElem x lasersRemove) lasersId ),map snd (filter (\(x,y) -> notElem x asteroidsRemove) asteroidsId ))
+                                                (map snd (filter (\(x,y) -> notElem x lasersRemoveId) lasersId ),map snd (filter (\(x,y) -> notElem x asteroidsRemoveId) asteroidsId ) ++ replacedBigAsteroids)
 
 collisionExists obj1 obj2 = let
                                     (colType,_,_,_,_) = detectCollision  obj1  obj2
                             in
                                     colType /= NoCollision
 
+separateAsteroid :: GameObject -> [GameObject]
+separateAsteroid asteroid = [ createGameObjectImgObject (x' + 50 , y' + 50) (80,80) (rotate 15 asteroidSmallImage)
+                            , createGameObjectImgObject (x' + 50 , y' - 50) (80,80) (rotate 345 asteroidSmallImage)
+                            , createGameObjectImgObject (x' - 50 , y' + 50) (80,80) (rotate 345 asteroidSmallImage)
+                            , createGameObjectImgObject (x' - 50 , y' - 50) (80,80) (rotate 15 asteroidSmallImage)
+                            ] where (x', y') =  getGameObjectCoordinates asteroid
 
 createAsteroid::Float->GameWorld->GameWorld
 createAsteroid sec world = world { asteroids=newAsteroids }
@@ -131,15 +139,21 @@ createAsteroid sec world = world { asteroids=newAsteroids }
                 randX = nextRand seed
                 randY = nextRand randX
                 x' = randX `mod` 1000 - 400
-                y' = randY `mod` 700 - 250 
+                y' = randY `mod` 700 - 200 
                 randStep = nextRand randY
-                step = randStep `mod` 250 
+                step = randStep `mod` 220
                 step1 = nextRand step `mod` 300 
 
-                newAsteroids =  if (0 == mod (frameCounter world) step) then (asteroids world) ++ [createGameObjectImgObject ( fromInteger $ toInteger x' , 450)  (80, 80) asteroidSmallImage]
-                                else if (0 == mod (frameCounter world) step1) then (asteroids world) ++ [createGameObjectImgObject (600 , fromInteger $ toInteger x' ) (80, 80) asteroidSmallImage]
+                newAsteroidImg = if mod randY 100 > 95 then  asteroidBigImage
+                                 else asteroidSmallImage
+
+                (w', h') = if mod randY 100 > 95 then (200,180)
+                           else (80,80)              
+
+                newAsteroids =  if (0 == mod (frameCounter world) step) then  (createGameObjectImgObject ( fromInteger $ toInteger x' , 450)  (w', h')  newAsteroidImg) : (asteroids world)
+                                else if (0 == mod (frameCounter world) step1) then (createGameObjectImgObject (600 , fromInteger $ toInteger y' ) (w', h')  newAsteroidImg) : (asteroids world) 
                                 else asteroids world
- 
+
 update :: Float -> GameWorld -> GameWorld
 update sec world = moveObjects $ updateCounter $ createAsteroid sec world 
 
