@@ -23,7 +23,16 @@ render gameWorld =
               ++ ( map (drawGameObject) (asteroids gameWorld)++ 
               [translate 300 200 $ text ( show (pointCounter gameWorld))])++
               ( map (drawGameObject) (player1Lives gameWorld))++
-    ( map (drawGameObject) (player2Lives gameWorld)))
+              ( map (drawGameObject) (player2Lives gameWorld))++
+              (if (length (player1Lives gameWorld))>0 && (player1Cooldown gameWorld)>0 then [drawAura (player1 gameWorld) (player1Aura gameWorld)] else [])++
+              (if (length (player2Lives gameWorld))>0 && (player2Cooldown gameWorld)>0 then [drawAura (player2 gameWorld) (player2Aura gameWorld)] else [])++
+              (if ((length (player1Lives gameWorld))==0) && ((length (player2Lives gameWorld))==0) then [gameOverImg] else [])++
+              (if (gamePaused gameWorld) then [gamePausedImg] else []))
+
+drawAura :: GameObject->GameObject->Picture
+drawAura player playerAura = translate pX pY ( drawGameObject playerAura)
+                              where
+                                    (pX,pY) = getGameObjectCoordinates player
 
 processEvent :: Event -> GameWorld -> GameWorld
 
@@ -52,6 +61,11 @@ processEvent (EventKey (Char 'w') Down _ _) world = world { player1Up = True }
 processEvent (EventKey (Char 's') Down _ _) world = world { player1Down = True }
 processEvent (EventKey (Char 'w') Up _ _) world = world { player1Up = False }
 processEvent (EventKey (Char 's') Up _ _) world = world { player1Down = False }
+
+processEvent (EventKey (Char 'r') Down _ _) world = initialWorld
+processEvent (EventKey (Char 'p') Down _ _) world = world { gamePaused = newGamePaused }
+                                                where
+                                                      newGamePaused = not (gamePaused world)
 
 processEvent _ world = world
 
@@ -186,7 +200,7 @@ createAsteroid sec world = world { asteroids=newAsteroids }
                                 else asteroids world
 
 update :: Float -> GameWorld -> GameWorld
-update sec world = moveObjects $ updateCounter $ createAsteroid sec world 
+update sec world =  if( not (gamePaused world)) then (moveObjects $ updateCounter $ createAsteroid sec world) else world
 
 -- ucitavanje svih slika
 player1BasicImg = png "images/greenBasic.png"
@@ -205,6 +219,10 @@ laserRedImage = png "images/laserRed.png"
 laserGreenImage = png "images/laserGreen.png"
 asteroidBigImage = png "images/asteroidBig.png"
 asteroidSmallImage = png "images/asteroidSmall.png"
+
+playerTimeoutImg = png "images/playerTimeout.png"
+gameOverImg = png "images/gameOver.png"
+gamePausedImg = png "images/gamePaused.png"
 
 
 -- kod preuzet sa vezbi prethodnih godina
@@ -233,6 +251,9 @@ data GameWorld = GameWorld  { player1 :: GameObject
                             , player1Lives :: [GameObject]
                             , player1Cooldown :: Int
                             , player2Cooldown :: Int
+                            , player1Aura :: GameObject
+                            , player2Aura :: GameObject
+                            , gamePaused :: Bool
                             }
 
 initialWorld = GameWorld { player1 = createGameObjectImgObject (0, 0) (80, 80) player1BasicImg
@@ -251,8 +272,11 @@ initialWorld = GameWorld { player1 = createGameObjectImgObject (0, 0) (80, 80) p
                          , pointCounter = 0
                          , player2Lives = createLives (-475,310) orangeLife 0
                          , player1Lives = createLives (475,310) greenLife 0
-                         , player1Cooldown = 600
-                         , player2Cooldown = 600                       
+                         , player1Cooldown = 1000
+                         , player2Cooldown = 1000            
+                         , player1Aura = createGameObjectImgObject (0, 0) (100, 100) playerTimeoutImg
+                         , player2Aura = createGameObjectImgObject (0, 0) (100, 100) playerTimeoutImg
+                         , gamePaused = False
                          }
                   --(((createGameObjectImgObject (-475,330-i*40) (30,40) orangeLife): lives1),((createGameObjectImgObject (475,330-i*40) (30,40) greenLife): lives2))
 
