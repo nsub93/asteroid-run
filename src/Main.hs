@@ -109,11 +109,17 @@ moveObjects world = world { player1 = newPlayer1 , player2 = newPlayer2
 
                 p1Cooldown=(player1Cooldown world)
                 p1Lives = (player1Lives world)
-                (newPlayer1Lives,newPlayer1Cooldown) = if((length p1Lives)>0 && (playerAsteroidCollision (player1 world) (asteroids world)) && (p1Cooldown==0)) then ((init p1Lives),600) else (p1Lives,updatePlayerCooldown p1Cooldown)
+                (newPlayer1Lives,newPlayer1Cooldown) = 
+                  if((length p1Lives)>0 && (playerAsteroidCollision (player1 world) (asteroids world)) && (p1Cooldown==0)) 
+                    then ((init p1Lives),600) 
+                  else (p1Lives,updatePlayerCooldown p1Cooldown)
                 
                 p2Cooldown=(player2Cooldown world)
                 p2Lives = (player2Lives world)
-                (newPlayer2Lives,newPlayer2Cooldown) = if((length p2Lives)>0 && (playerAsteroidCollision (player2 world) (asteroids world)) && (p2Cooldown==0)) then ((init p2Lives),600) else (p2Lives,updatePlayerCooldown p2Cooldown)
+                (newPlayer2Lives,newPlayer2Cooldown) = 
+                  if((length p2Lives)>0 && (playerAsteroidCollision (player2 world) (asteroids world)) && (p2Cooldown==0)) 
+                    then ((init p2Lives),600) 
+                  else (p2Lives,updatePlayerCooldown p2Cooldown)
    
                 p1 =  moveGameObject (player1 world) dx1 dy1                                
                 p2 =  moveGameObject (player2 world) dx2 dy2
@@ -130,7 +136,7 @@ moveObjects world = world { player1 = newPlayer1 , player2 = newPlayer2
 
                 movedLasersPlayer1 = laserOrAsteroidOutOfBound $ map (\x -> moveGameObject x 0 1.6) (lasersPlayer1 world)
                 movedLasersPlayer2 = laserOrAsteroidOutOfBound $ map (\x -> moveGameObject x 0 1.6) (lasersPlayer2 world)
-                movedAsteroids = laserOrAsteroidOutOfBound $ map (\x -> moveGameObject x (-0.7 * astep) (-1 * astep)) (asteroids world)
+                movedAsteroids = laserOrAsteroidOutOfBound $ map (\x -> moveGameObject x (-1 * astep) (-0.7 * astep)) (asteroids world)
 
                 (newLasersPlayer1, survivedAsteroids) =   laserAsteroidCollision (movedLasersPlayer1, movedAsteroids)
                 newPointsPlayer1 = (pointsPlayer1 world) + if (asteroiDifference) < 0 then asteroiDifference + 4
@@ -173,10 +179,14 @@ laserAsteroidCollision (lasers,asteroids) = let
                                                 collisions = filter (\(x,y) ->  collisionExists (snd x) (snd y)) cartesianList
                                                 (lasersRemoveId,_) = unzip $ map (fst) collisions
                                                 (asteroidsRemoveId, asteroidsRemove) = unzip $ map (snd) collisions
-                                                replacedBigAsteroids =  foldr (\asteroid asteroids -> (separateAsteroid asteroid) ++ asteroids ) [] (filter (\x -> fst(getGameObjectSize x)  == 200.0) asteroidsRemove)
+                                                replacedBigAsteroids =  foldr (\asteroid asteroids -> 
+                                                                                (separateAsteroid asteroid) ++ asteroids 
+                                                                              ) [] 
+                                                                              (filter (\x -> fst(getGameObjectSize x)  == 200.0) asteroidsRemove)
                                                                          
                                           in
-                                                (map snd (filter (\(x,y) -> notElem x lasersRemoveId) lasersId ),map snd (filter (\(x,y) -> notElem x asteroidsRemoveId) asteroidsId ) ++ replacedBigAsteroids)
+                                                ( map snd (filter (\(x,y) -> notElem x lasersRemoveId) lasersId )
+                                                , map snd (filter (\(x,y) -> notElem x asteroidsRemoveId) asteroidsId ) ++ replacedBigAsteroids)
 
 updatePlayerCooldown p1Cooldown = if p1Cooldown>0 then p1Cooldown-1 else p1Cooldown
 
@@ -210,12 +220,16 @@ createAsteroid sec world = world { asteroids=newAsteroids }
                 (newAsteroidImg, w', h') = if mod randY 100 > 95 then  (asteroidBigImage, 200, 180)
                                  else (asteroidSmallImage, 80, 80)
 
-                newAsteroids =  if (0 == mod (frameCounter world) step) then  (createGameObjectImgObject ( fromInteger $ toInteger x' , 450)  (w', h')  newAsteroidImg) : (asteroids world)
-                                else if (0 == mod (frameCounter world) step1) then (createGameObjectImgObject (600 , fromInteger $ toInteger y' ) (w', h')  newAsteroidImg) : (asteroids world) 
+                newAsteroids =  if (0 == mod (frameCounter world) step) then  
+                                  (createGameObjectImgObject ( fromInteger $ toInteger x' , 450) (w', h')  newAsteroidImg) : (asteroids world)
+                                else if (0 == mod (frameCounter world) step1) then 
+                                  (createGameObjectImgObject (600 , fromInteger $ toInteger y' ) (w', h')  newAsteroidImg) : (asteroids world) 
                                 else asteroids world
 
 update :: Float -> GameWorld -> GameWorld
-update sec world =  if( not (gamePaused world)) then (moveObjects $ updateCounter $ createAsteroid sec world) else world
+update sec world =  if( not (gamePaused world)) then 
+                      (moveObjects $ updateCounter $ createAsteroid sec world) 
+                    else world
 
 -- ucitavanje svih slika
 player1BasicImg = png "images/greenBasic.png"

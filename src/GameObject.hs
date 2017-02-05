@@ -8,6 +8,12 @@ module GameObject
 , getGameObjectCoordinates
 , getGameObjectSize
 , detectCollision
+, resetGameObject
+, getCollisionType
+, getLeftCollisionCoefficient
+, getRightCollisionAngleCoefficient
+, getTopCollisionAngleCoefficient
+, getBottomCollisionAngleCoefficient
 , changeGameObjectImage
 ) where
 
@@ -61,6 +67,10 @@ moveGameObject obj dx dy = obj { x = x', y = y' }
 
 drawGameObject :: GameObject -> Picture
 drawGameObject obj = translate (x obj) (y obj) $ image obj
+
+resetGameObject :: GameObject -> Float -> Float -> GameObject
+resetGameObject obj x' y' = obj { x = x', y = y' }
+
 
 getGameObjectCoordinates :: GameObject -> (Float, Float)
 getGameObjectCoordinates obj = (x obj , y obj) 
@@ -134,4 +144,19 @@ detectCollision obj1 obj2 = (collisionType,
         RightCollision
       else
         NoCollision
+
+getCollisionType :: Collision -> CollisionType
+getCollisionType (collisionType, _, _, _, _) = collisionType
+
+getLeftCollisionCoefficient :: Collision -> Float
+getLeftCollisionCoefficient (_, leftCollisionCoefficient, _, _, _) = leftCollisionCoefficient
+
+getRightCollisionAngleCoefficient :: Collision -> Float
+getRightCollisionAngleCoefficient (_, _, rightCollisionAngleCoefficient, _, _) = rightCollisionAngleCoefficient
+
+getTopCollisionAngleCoefficient :: Collision -> Float
+getTopCollisionAngleCoefficient (_, _, _, topCollisionAngleCoefficient, _) = topCollisionAngleCoefficient
+
+getBottomCollisionAngleCoefficient :: Collision -> Float
+getBottomCollisionAngleCoefficient (_, _, _, _, bottomCollisionAngleCoefficient) = bottomCollisionAngleCoefficient
 
